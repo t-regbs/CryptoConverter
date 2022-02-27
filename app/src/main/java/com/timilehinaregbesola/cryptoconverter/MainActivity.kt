@@ -132,7 +132,7 @@ fun FeaturedCoinCard(
                 Text(text = name.second, color = textColor)
                 Text(text = "+$percentage%", color = Color(0xFFA2A2A6))
             }
-            Text(modifier = Modifier.weight(1f), text = amount.toString(), fontSize = 16.sp)
+            Text(modifier = Modifier.weight(1f), text = amount.toString(), fontSize = 24.sp)
             Column(modifier = Modifier.weight(3f), verticalArrangement = Arrangement.Bottom) {
                 Text(
                     text = name.first,
