@@ -12,4 +12,6 @@ val appModule = module {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(CryptoApi::class.java)
+
+    single { provideCryptoApi() }
 }
