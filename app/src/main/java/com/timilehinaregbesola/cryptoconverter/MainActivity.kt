@@ -16,7 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.DropdownMenu
@@ -26,6 +32,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
@@ -34,15 +42,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.timilehinaregbesola.cryptoconverter.main.MainViewModel
 import com.timilehinaregbesola.cryptoconverter.ui.theme.CryptoConverterTheme
+import org.koin.androidx.compose.get
 
+val fiatList = listOf(
+    "AED", "CAD", "CNY", "EUR", "GBP", "HKD", "INR", "IQD", "JMD", "JPY", "KES", "KPW", "KRW", "KWD", "MKD",
+    "MWK", "MXN", "NAD", "NGN", "NZD", "UGX", "USD", "UYU", "VND", "XAG", "XAU"
+)
+val cryptoList = listOf(
+    "ADA", "BCD", "BCH", "BNB", "BTC", "BTCA", "DOGE", "DRGN", "EOS", "ERT", "ETC", "ETH", "LEO", "LINDA",
+    "LINK", "LTC", "LUN", "MANA", "MIOTA", "TESLA", "THC", "THETA", "THS", "TRUMP", "TRX", "USDT", "WAVES",
+    "WAX", "WTC", "XLM", "XTZ", "XMR", "XRP"
+)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +85,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun HomeScreen() {
+    val viewModel = get<MainViewModel>()
+    val conversionState = viewModel.conversion.value
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,6 +100,7 @@ fun HomeScreen() {
                 .fillMaxSize()
                 .background(color = Color(0xFF050506))
                 .padding(horizontal = 32.dp, vertical = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -113,7 +139,13 @@ fun HomeScreen() {
                 )
             }
             Spacer(Modifier.height(64.dp))
-            Column(Modifier.padding(horizontal = 32.dp)) {
+            Column(
+                Modifier.padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                val sendAmountText = rememberSaveable { mutableStateOf("0.686") }
+                val currSelectedCurrency = rememberSaveable { mutableStateOf("NGN") }
+                val currSelectedToken = rememberSaveable { mutableStateOf("ETH") }
                 Text(
                     modifier = Modifier.padding(bottom = 8.dp),
                     text = "Send",
@@ -124,13 +156,31 @@ fun HomeScreen() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        modifier = Modifier.padding(bottom = 8.dp),
-                        text = "0.686",
-                        fontSize = 21.sp,
-                        color = Color.White
+                    TextField(
+                        modifier = Modifier.width(150.dp),
+                        value = sendAmountText.value,
+                        onValueChange = { sendAmountText.value = it },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontSize = 21.sp,
+//                            textAlign = TextAlign.Center
+                        ),
+                        colors = TextFieldDefaults.textFieldColors(
+                            backgroundColor = Color(0xFF050506),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
+                        ),
+                        shape = MaterialTheme.shapes.medium.copy(CornerSize(24.dp))
                     )
-                    CurrencySelector(initialDiff = 0) {}
+                    CurrencySelector(initialDiff = 18, isCrypto = false) {
+                        currSelectedCurrency.value = fiatList[it]
+                    }
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -141,17 +191,25 @@ fun HomeScreen() {
                         modifier = Modifier.width(80.dp),
                         color = Color(0xFFA2A2A6),
                     )
-                    Icon(
+                    Button(
                         modifier = Modifier
-                            .background(
-                                color = Color(0xFFE4E4E5),
-                                shape = RoundedCornerShape(16.dp)
-                            )
                             .padding(8.dp),
-                        imageVector = Icons.Filled.SwapHoriz,
-                        contentDescription = "Change icon",
-                        tint = Color.Black
-                    )
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFE4E4E5)),
+                        onClick = {
+                            viewModel.convert(
+                                sendAmountText.value,
+                                currSelectedCurrency.value,
+                                currSelectedToken.value
+                            )
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SwapHoriz,
+                            contentDescription = "Change icon",
+                            tint = Color.Black
+                        )
+                    }
                     Divider(
                         modifier = Modifier.width(80.dp),
                         color = Color(0xFFA2A2A6),
@@ -169,11 +227,13 @@ fun HomeScreen() {
                 ) {
                     Text(
                         modifier = Modifier.padding(bottom = 8.dp),
-                        text = "39.393",
+                        text = conversionState.coin,
                         fontSize = 21.sp,
                         color = Color.White
                     )
-                    CurrencySelector(initialDiff = 2) {}
+                    CurrencySelector(initialDiff = 11, isCrypto = true) {
+                        currSelectedToken.value = cryptoList[it]
+                    }
                 }
             }
         }
@@ -181,10 +241,10 @@ fun HomeScreen() {
 }
 
 @Composable
-fun CurrencySelector(initialDiff: Int, onValueChange: (Int) -> Unit) {
+fun CurrencySelector(initialDiff: Int = 0, isCrypto: Boolean, onValueChange: (Int) -> Unit) {
     val expanded = remember { mutableStateOf(false) }
-    val items = listOf("BTC", "ETH", "USDT")
     var init by remember { mutableStateOf(initialDiff) }
+    val currentList = if (isCrypto) cryptoList else fiatList
     Box {
         Row(
             modifier = Modifier
@@ -198,7 +258,7 @@ fun CurrencySelector(initialDiff: Int, onValueChange: (Int) -> Unit) {
             )
             Text(
                 modifier = Modifier.padding(bottom = 8.dp),
-                text = items[init],
+                text = currentList[init],
                 fontSize = 21.sp,
                 color = Color.White
             )
@@ -207,7 +267,7 @@ fun CurrencySelector(initialDiff: Int, onValueChange: (Int) -> Unit) {
             expanded = expanded.value,
             onDismissRequest = { expanded.value = false }
         ) {
-            items.forEachIndexed { index, s ->
+            currentList.forEachIndexed { index, s ->
                 DropdownMenuItem(
                     onClick = {
                         expanded.value = false

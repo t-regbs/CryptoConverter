@@ -1,6 +1,10 @@
 package com.timilehinaregbesola.cryptoconverter.di
 
 import com.timilehinaregbesola.cryptoconverter.data.CryptoApi
+import com.timilehinaregbesola.cryptoconverter.main.DefaultRepository
+import com.timilehinaregbesola.cryptoconverter.main.MainRepository
+import com.timilehinaregbesola.cryptoconverter.main.MainViewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -13,5 +17,9 @@ val appModule = module {
         .build()
         .create(CryptoApi::class.java)
 
+    fun provideMainRepository(api: CryptoApi): MainRepository = DefaultRepository(api)
+
     single { provideCryptoApi() }
+    single { provideMainRepository(get()) }
+    viewModel { MainViewModel(get()) }
 }

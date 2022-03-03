@@ -17,20 +17,20 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
     fun convert(amount: String, fromCurrency: String, toCurrency: String) {
         val fromAmount = amount.toFloatOrNull()
         if (fromAmount == null) {
-            _conversion.value = _conversion.value.copy(error = "Invalid amount supplied")
+            _conversion.value = ConversionState(error = "Invalid amount supplied")
         }
 
         viewModelScope.launch {
             when (val ratesResponse = repository.getRates(fromCurrency)) {
-                is Resource.Error -> _conversion.value = _conversion.value.copy(error = ratesResponse.message!!)
+                is Resource.Error -> _conversion.value = ConversionState(error = ratesResponse.message!!)
                 is Resource.Success -> {
                     val rates = ratesResponse.data!!.rates
                     val rate = getRateForCrypto(toCurrency, rates)
                     if (rate == null) {
-                        _conversion.value = _conversion.value.copy(error = "Unexpected error")
+                        _conversion.value = ConversionState(error = "Unexpected error")
                     } else {
                         val convertedCurrency = round(fromAmount!! * rate * 100) / 100
-                        _conversion.value = _conversion.value.copy(
+                        _conversion.value = ConversionState(
                             coin = "$fromAmount $fromCurrency = $convertedCurrency $toCurrency"
                         )
                     }
