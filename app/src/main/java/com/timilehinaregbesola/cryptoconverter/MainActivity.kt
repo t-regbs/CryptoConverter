@@ -178,7 +178,7 @@ fun HomeScreen() {
                         ),
                         shape = MaterialTheme.shapes.medium.copy(CornerSize(24.dp))
                     )
-                    CurrencySelector(initialDiff = 18, isCrypto = false) {
+                    CurrencySelector(initialDiff = 3, isCrypto = false) {
                         currSelectedCurrency.value = fiatList[it]
                     }
                 }

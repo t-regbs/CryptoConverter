@@ -8,7 +8,8 @@ import com.timilehinaregbesola.cryptoconverter.data.models.ConversionState
 import com.timilehinaregbesola.cryptoconverter.data.models.Rates
 import com.timilehinaregbesola.cryptoconverter.util.Resource
 import kotlinx.coroutines.launch
-import kotlin.math.round
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 class MainViewModel(private val repository: MainRepository) : ViewModel() {
     private val _conversion = mutableStateOf(ConversionState())
@@ -29,10 +30,10 @@ class MainViewModel(private val repository: MainRepository) : ViewModel() {
                     if (rate == null) {
                         _conversion.value = ConversionState(error = "Unexpected error")
                     } else {
-                        val convertedCurrency = round(fromAmount!! * rate * 100) / 100
-                        _conversion.value = ConversionState(
-                            coin = "$fromAmount $fromCurrency = $convertedCurrency $toCurrency"
-                        )
+                        val df = DecimalFormat("#.######")
+                        df.roundingMode = RoundingMode.CEILING
+                        val convertedCurrency = df.format(fromAmount!! / rate)
+                        _conversion.value = ConversionState(coin = "$convertedCurrency $toCurrency")
                     }
                 }
             }
